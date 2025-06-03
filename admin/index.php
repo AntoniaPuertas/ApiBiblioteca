@@ -13,7 +13,7 @@
 <body>
     <div class="container">
     <h1>Panel de control</h1>
-    <table class="tablaLibros" id="tablaLibros" border=1></table>
+    <table class="tablaLibros" id="tablaLibros"></table>
     </div>
     <script src="js/funciones.js"></script>
 </body>
