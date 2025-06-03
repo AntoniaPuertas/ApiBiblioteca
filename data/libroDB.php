@@ -1,6 +1,6 @@
 <?php
 /**
- * Se encarga de interactuar con la base de datos
+ * Se encarga de interactuar con la base de datos con la tabla libros
  */
 class LibroDB {
 
@@ -100,6 +100,61 @@ class LibroDB {
             $stmt->close();
         }
         return false;
+    }
+
+    //actualizar libro
+    public function update($id, $data){
+
+               $sql = "UPDATE {$this->table} SET
+                titulo = ?,
+                autor = ?,
+                genero = ?,
+                fecha_publicacion = ?,
+                disponible = ?,
+                imagen = ?,
+                favorito = ?,
+                resumen = ?
+                WHERE id = ?
+               ";
+
+        //Leer los datos actuales
+        $libro = $this->getById($id);
+        if(!$libro){
+            return false;
+        }
+
+        $titulo = isset($data['titulo']) ? $data['titulo'] : $libro['titulo'];
+        $autor = isset($data['autor']) ? $data['autor'] : $libro['autor'];
+        $genero = isset($data['genero']) ? $data['genero'] : $libro['genero'];
+        $fecha_publicacion = isset($data['fecha_publicacion']) ? $data['fecha_publicacion'] : $libro['fecha_publicacion'];
+        $disponible = isset($data['disponible']) ? (int)(bool)$data['disponible'] : $libro['disponible'];
+        $imagen = isset($data['imagen']) ? $data['imagen'] : $libro['imagen'];
+        $favorito = isset($data['favorito']) ? (int)(bool)$data['favorito'] : $libro['favorito'];
+        $resumen = isset($data['resumen']) ? $data['resumen'] : $libro['resumen'];
+
+        $stmt = $this->db->prepare($sql);
+        if($stmt){   
+            $stmt->bind_param(
+                "sssiisisi",
+                $titulo,
+                $autor,
+                $genero,
+                $fecha_publicacion,
+                $disponible,
+                $imagen,
+                $favorito,
+                $resumen,
+                $id
+            );
+
+            if($stmt->execute()){
+                $stmt->close();
+                //devuelve todos los datos del libro que acabamos de modificar
+                return $this->getById($id);
+            }
+            $stmt->close();
+        }
+        return false; 
     }
 
     //eliminar un libro

@@ -21,3 +21,13 @@ DELETE FROM libros WHERE disponible = 0
 
 Elimina el libro con id = 8
 DELETE FROM libros WHERE id = 8;
+
+endpoints de la API para la tabla libros:
+GET ApiBiblioteca/api/libros - devuelve todos los libros
+GET ApiBiblioteca/api/libros/3 - devuelve el libro con id = 3
+POST ApiBiblioteca/api/libros - crea un nuevo libro (datos en el body de la petición)
+PUT ApiBiblioteca/api/libros/3 - actualiza los datos del libro con id = 3
+DELETE ApiBiblioteca/api/libros/3 - elimina el libro con id = 3
+
+endpoints para la tabla usuarios
+GET ApiBiblioteca/api/usuarios

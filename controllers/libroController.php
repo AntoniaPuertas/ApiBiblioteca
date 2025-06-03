@@ -32,6 +32,9 @@ class LibroController {
                 //crear un nuevo libro
                 $respuesta = $this->createLibro();
                 break;
+            case 'PUT':
+                $respuesta = $this->updateLibro($this->libroId);
+                break;
             case 'DELETE':
                 $respuesta = $this->deleteLibro($this->libroId);
                 break;
@@ -101,6 +104,37 @@ class LibroController {
             'success' => true,
             'data' => $libro,
             'message' => 'Libro creado con exito'
+        ]);
+        return $respuesta;
+
+    }
+
+    private function updateLibro($id){
+        $libro = $this->libroDB->getById($id);
+        if(!$libro){
+            return $this->noEncontradoRespuesta();
+        }
+        //el libro existe
+        //leo los datos que llegan en el body de la  petición
+        $input = json_decode(file_get_contents('php://input'),true);
+
+        // if(!$this->validarDatos($input)){
+        //     return $this->datosInvalidosRespuesta();
+        // }
+
+        //el libro existe y los datos que llegan son válidos
+        $libroActualizado = $this->libroDB->update($this->libroId, $input);
+
+        if(!$libroActualizado){
+            return $this->internalServerError();
+        }
+        //el libro se ha actualizado con éxito
+        //construyo la respuesta
+        $respuesta['status_code_header'] = 'HTTP/1.1 200 OK';
+        $respuesta['body'] = json_encode([
+            'success' => true,
+            'message' => 'Libro actualizado exitosamente',
+            'data' => $libroActualizado
         ]);
         return $respuesta;
 
