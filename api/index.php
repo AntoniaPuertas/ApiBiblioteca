@@ -57,9 +57,7 @@ $database = new Database();
 $controller = new LibroController($database, $requestMethod, $libroId);
 
 //procesar la petición
-$controller->processRequest($libroId);
+$controller->processRequest();
 
 //cerrar la conexión
 $database->close();
-
-
