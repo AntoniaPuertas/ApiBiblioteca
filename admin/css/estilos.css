@@ -1,5 +1,6 @@
 /* Contenedor de la tabla */
 .container {
+  width: 100%;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -29,7 +30,7 @@
 }
 
 .cabeceras td {
-  padding: 16px 20px;
+  padding: 16px auto;
   text-align: left;
   font-weight: 600;
   font-size: 13px;
@@ -94,7 +95,21 @@ button {
   margin-right: 10px;
 }
 
+.panelCrear {
+  text-align: right;
+  padding: 0.5rem;
+}
+
 .btn-delete {
   background-color: #dc3545;
 }
 
+.centrado {
+  text-align: center !important;
+}
+
+/* Formulario */
+
+form{
+  display: none;
+}

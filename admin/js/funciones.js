@@ -1,11 +1,26 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const url = 'http://localhost/ApiBiblioteca/api/libros';
+const url = 'http://localhost/ApiBiblioteca/api/libros';
 
+document.addEventListener('DOMContentLoaded', () => {
+    
     //realizo la llamada a la api para conseguir los datos
     fetch(url)
         .then(response => response.json())
         .then(data => mostrarLibros(data))
         .catch(error => console.error('Error:', error));
+
+    document.getElementById("crear").addEventListener('click', () => {
+        // si document.querySelector('form').style.display devuelve un valor vacío 
+        // estado toma el segundo valor none
+        const estado = document.querySelector('form').style.display || 'none';
+        if(estado === 'none'){
+            document.querySelector('form').style.display = 'block'
+            document.getElementById("crear").textContent = 'Ocultar formulario'
+        }else{
+            document.querySelector('form').style.display = 'none'
+            document.getElementById("crear").textContent = 'Crear nuevo libro'
+        }
+        
+    })
 })
 
 function mostrarLibros(datos){
@@ -20,7 +35,7 @@ function mostrarLibros(datos){
             `
                 <td>${clave.toUpperCase()}</td>
                 ${
-                    clave == 'resumen' ? '<td colspan="2">Acciones</td>' : ''
+                    clave == 'resumen' ? '<td class="centrado" colspan="2">Acciones</td>' : ''
                 }
             `
             ).join('')
@@ -35,12 +50,16 @@ function mostrarLibros(datos){
                 <td>${libro.autor}</td>
                 <td>${libro.genero}</td>
                 <td>${libro.fecha_publicacion}</td>
-                <td><img src="../img/peques/${libro.imagen}" alt="${libro.titulo}" /></td>
-                <td>${(libro.disponible == 1) ? "Sí" : "No"}</td>
-                <td>${(libro.favorito == 1) ? "Sí" : "No"}</td>
+                <td><img src="../img/peques/${libro.imagen}?${new Date().getTime()}" alt="${libro.titulo}" /></td>
+                <td class="centrado">${(libro.disponible == 1) ? "Sí" : "No"}</td>
+                <td class="centrado">${(libro.favorito == 1) ? "Sí" : "No"}</td>
                 <td>${(libro.resumen !== null && libro.resumen.length > 0) ? libro.resumen.substring(0, 100)+"..." : ''}</td>
-                <td><button onclick="editarLibro(${libro.id})">Editar</button></td>
-                <td><button onclick="eliminarLibro(${libro.id})" class="btn-delete">Eliminar</button></td>
+                <td>
+                    <button onclick="editarLibro(${libro.id})">Editar</button>
+                </td>
+                <td>
+                    <button onclick="eliminarLibro(${libro.id}, '${libro.titulo}')" class="btn-delete">Eliminar</button>
+                </td>
             </tr>
             `).join(' ')
 
@@ -48,4 +67,35 @@ function mostrarLibros(datos){
     }else if(datos.count == 0){
         document.getElementById('divLibros').innerHTML = "<p>No hay libros</p>";
     }
+}
+
+function eliminarLibro(id, titulo){
+    const confirma = confirm(`¿Seguro que quieres eliminar el libro: ${titulo}?`)
+
+    if(!confirma){
+        return
+    }
+
+    //El usuario ha confirmado que quiere eliminar el libro
+    fetch(`${url}/${id}`, {
+        method: 'DELETE'
+    })
+        .then(response => response.json())
+        .then(data => libroEliminado(data))
+        .catch(error => console.error('Error:', error));
+}
+
+function libroEliminado(data){
+    if(data.success){
+    fetch(url)
+        .then(response => response.json())
+        .then(data => mostrarLibros(data))
+        .catch(error => console.error('Error:', error));
+    }else{
+        alert("Hubo un problema al eliminar el libro")
+    }
+}
+
+function editarLibro(id){
+    alert("Editar");
 }
