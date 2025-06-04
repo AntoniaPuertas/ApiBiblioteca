@@ -15,7 +15,7 @@ function mostrarLibros(datos){
 
     if(datos.success && datos.count > 0){
         document.getElementById('tablaLibros').innerHTML = 
-            "<tr>" +
+            "<tr class='cabeceras'>" +
             Object.keys(libros[0]).map(clave =>  
             `
                 <td>${clave.toUpperCase()}</td>
@@ -35,6 +35,7 @@ function mostrarLibros(datos){
                 <td>${(libro.disponible == 1) ? "Sí" : "No"}</td>
                 <td>${(libro.favorito == 1) ? "Sí" : "No"}</td>
                 <td>${(libro.resumen !== null && libro.resumen.length > 0) ? libro.resumen.substring(0, 100)+"..." : ''}</td>
+                <td><button onclick="eliminarLibro(${libro.id})" class="btn-delete">Eliminar</button></td>
             </tr>
             `).join(' ')
 
