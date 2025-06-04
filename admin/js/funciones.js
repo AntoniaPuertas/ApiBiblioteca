@@ -18,7 +18,7 @@ function mostrarLibros(datos){
             "<tr>" +
             Object.keys(libros[0]).map(clave =>  
             `
-                <td>${clave}</td>
+                <td>${clave.toUpperCase()}</td>
             `
             ).join('')
             + "</tr>"
