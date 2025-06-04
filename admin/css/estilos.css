@@ -79,18 +79,22 @@
   color: #1f2937;
 }
 
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
-        }
+.tablaLibros img{
+  width: 50px;
+}
 
-        .btn-delete {
-            background-color: #dc3545;
-        }
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+}
 
