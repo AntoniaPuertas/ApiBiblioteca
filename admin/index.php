@@ -18,32 +18,49 @@
     </div>
     <!-- enctype="multipart/form-data" se utiliza cuando queremos subir archivos -->
     <form action="#" enctype="multipart/form-data">
-        <label for="titulo">Título</label>
-        <input type="text" id="titulo" name="titulo">
+        <h2>📚 Nuevo Libro</h2>
+        
+        <div class="form-group">
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" name="titulo" required>
+        </div>
 
-        <label for="autor">Autor</label>
-        <input type="text" id="autor" name="autor">
+        <div class="form-group">
+            <label for="autor">Autor</label>
+            <input type="text" id="autor" name="autor" required>
+        </div>
 
-        <label for="genero">Genero</label>
-        <input type="text" id="genero" name="genero">
+        <div class="form-group">
+            <label for="genero">Género</label>
+            <input type="text" id="genero" name="genero">
+        </div>
 
-        <label for="publicacion">Fecha de publicación</label>
-        <input type="number" id="publicacion" name="publicacion">
+        <div class="form-group">
+            <label for="publicacion">Fecha de publicación</label>
+            <input type="number" id="publicacion" name="publicacion" min="1000">
+        </div>
 
-        <label for="imagen">Imagen</label>
-        <input type="file" id="imagen" name="imagen">
+        <div class="form-group">
+            <label for="imagen">Imagen</label>
+            <input type="file" id="imagen" name="imagen" accept="image/*">
+        </div>
 
-        <input type="checkbox" id="disponible" name="disponible">
-        <label for="disponible">Disponible</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="disponible" name="disponible">
+            <label for="disponible">Disponible</label>
+        </div>
 
-        <input type="checkbox" id="favorito" name="favorito">
-        <label for="favorito">Favorito</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="favorito" name="favorito">
+            <label for="favorito">Favorito</label>
+        </div>
 
-        <label for="resumen">Resumen</label>
-        <textarea name="resumen" id="resumen" rows="6"></textarea>
+        <div class="form-group">
+            <label for="resumen">Resumen</label>
+            <textarea name="resumen" id="resumen" rows="6" placeholder="Escribe un breve resumen del libro..."></textarea>
+        </div>
 
-        <button>Guardar libro</button>
-
+        <button type="submit">Guardar libro</button>
     </form>
     <table class="tablaLibros" id="tablaLibros"></table>
     </div>

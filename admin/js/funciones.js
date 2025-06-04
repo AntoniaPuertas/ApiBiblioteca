@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // estado toma el segundo valor none
         const estado = document.querySelector('form').style.display || 'none';
         if(estado === 'none'){
-            document.querySelector('form').style.display = 'block'
+            document.querySelector('form').style.display = 'grid'
             document.getElementById("crear").textContent = 'Ocultar formulario'
         }else{
             document.querySelector('form').style.display = 'none'
