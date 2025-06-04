@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
     })
+
+    document.querySelector('form').addEventListener('submit', enviarDatosNuevoLibro)
 })
 
 function mostrarLibros(datos){
@@ -98,4 +100,20 @@ function libroEliminado(data){
 
 function editarLibro(id){
     alert("Editar");
+}
+
+function enviarDatosNuevoLibro(e){
+    e.preventDefault(); 
+
+    //comprobar los datos
+    //autor es obligatorio
+
+    //titulo es obligatorio
+
+    //fecha es un número entre 1000 y el año actual + 1
+
+    //resumen es un texto con 1000 caracteres como máximo
+
+    
+    alert('dentro de enviardatos nuevo libro')
 }

@@ -17,7 +17,7 @@
         <button id="crear" class="btn-crear">Crear nuevo libro</button>
     </div>
     <!-- enctype="multipart/form-data" se utiliza cuando queremos subir archivos -->
-    <form action="#" enctype="multipart/form-data">
+    <form action="guardarLibro.php" method="POST" enctype="multipart/form-data">
         <h2>📚 Nuevo Libro</h2>
         
         <div class="form-group">
