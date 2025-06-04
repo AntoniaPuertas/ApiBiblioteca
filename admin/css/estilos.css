@@ -98,6 +98,9 @@ button {
 .panelCrear {
   text-align: right;
   padding: 0.5rem;
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
 }
 
 .btn-delete {
@@ -122,6 +125,7 @@ form {
             width: 100%;
             max-width: 1000px;
             display: none;
+            margin: auto;
             gap: 20px;
         }
 
