@@ -1,5 +1,9 @@
 const url = 'http://localhost/ApiBiblioteca/api/libros';
 
+let libros = []; //Para almacenar los datos de los libros
+let modoEdicion = false; // Para saber si estamos editando o creando
+let libroEditandoId = null; // ID del libro que se está editando
+
 document.addEventListener('DOMContentLoaded', () => {
     
     //realizo la llamada a la api para conseguir los datos
@@ -27,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function mostrarLibros(datos){
 
-    const libros = datos.data;
+    libros = datos.data;
     console.log(libros)
 
     if(datos.success && datos.count > 0){
@@ -52,12 +56,12 @@ function mostrarLibros(datos){
                 <td>${libro.autor}</td>
                 <td>${libro.genero}</td>
                 <td>${libro.fecha_publicacion}</td>
-                <td><img src="../img/peques/${libro.imagen}?${new Date().getTime()}" alt="${libro.titulo}" /></td>
+                <td>${(libro.imagen && libro.imagen.trim() !== '') ? `<img src="../img/peques/${libro.imagen}?${new Date().getTime()}" alt="${libro.titulo}" />` : 'Sin imagen'}</td>
                 <td class="centrado">${(libro.disponible == 1) ? "Sí" : "No"}</td>
                 <td class="centrado">${(libro.favorito == 1) ? "Sí" : "No"}</td>
                 <td>${(libro.resumen !== null && libro.resumen.length > 0) ? libro.resumen.substring(0, 100)+"..." : ''}</td>
                 <td>
-                    <button onclick="editarLibro(${libro.id})">Editar</button>
+                    <button onclick="editarLibro(${libro.id}, '${libro.titulo}')">Editar</button>
                 </td>
                 <td>
                     <button onclick="eliminarLibro(${libro.id}, '${libro.titulo}')" class="btn-delete">Eliminar</button>
@@ -98,8 +102,14 @@ function libroEliminado(data){
     }
 }
 
-function editarLibro(id){
-    alert("Editar");
+function editarLibro(id, titulo){
+        // Encontramos el libro en los datos que ya tenemos
+    const libroAEditar = libros.find(l => l.id === id);
+    
+    if (libroAEditar) {
+        rellenarFormularioEdicion(libroAEditar);
+        mostrarFormularioEdicion(id);
+    }
 }
 
 function enviarDatosNuevoLibro(e){
@@ -137,6 +147,12 @@ function enviarDatosNuevoLibro(e){
 
     if (resumen.length > 1000) {
         document.getElementById("error-resumen").textContent = "El resumen no puede superar los 1000 caracteres.";
+        errores = true;
+    }
+
+    const validacionImagen = validarImagen(imagen);
+    if (!validacionImagen.esValido) {
+        document.getElementById("error-imagen").textContent = validacionImagen.mensaje;
         errores = true;
     }
 
@@ -181,4 +197,46 @@ function enviarDatosNuevoLibro(e){
         alert("❌ Error al guardar el libro");
     });
 
+}
+
+
+/**
+ * Valida que el archivo sea una imagen válida y no exceda el tamaño máximo
+ * @param {File} archivo - Archivo a validar
+ * @param {number} tamañoMaximoMB - Tamaño máximo en MB (por defecto 1MB)
+ * @returns {Object} - {esValido: boolean, mensaje: string}
+ */
+function validarImagen(archivo, tamañoMaximoMB = 1) {
+    // Si no hay archivo, es válido (la imagen es opcional)
+    if (!archivo) {
+        return { esValido: true, mensaje: "" };
+    }
+
+    // Validar tipo de archivo
+    const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!tiposPermitidos.includes(archivo.type)) {
+        return { 
+            esValido: false, 
+            mensaje: "Solo se permiten archivos de imagen (JPEG, PNG, GIF, WebP)." 
+        };
+    }
+
+    // Validar tamaño (convertir MB a bytes)
+    const tamañoMaximoBytes = tamañoMaximoMB * 1024 * 1024;
+    if (archivo.size > tamañoMaximoBytes) {
+        return { 
+            esValido: false, 
+            mensaje: `La imagen no puede superar los ${tamañoMaximoMB}MB. Tamaño actual: ${(archivo.size / (1024 * 1024)).toFixed(2)}MB.` 
+        };
+    }
+
+    // Validar que el archivo tenga contenido
+    if (archivo.size === 0) {
+        return { 
+            esValido: false, 
+            mensaje: "El archivo de imagen está vacío." 
+        };
+    }
+
+    return { esValido: true, mensaje: "" };
 }

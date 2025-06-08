@@ -46,6 +46,7 @@
         <div class="form-group">
             <label for="imagen">Imagen</label>
             <input type="file" id="imagen" name="imagen" accept="image/*">
+            <small class="error" id="error-imagen"></small>
         </div>
 
         <div class="checkbox-group">
