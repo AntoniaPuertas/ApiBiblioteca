@@ -81,9 +81,14 @@ class LibroController {
     }
 
     private function createLibro(){
-
-        //ahora los datos vienen en el array $_POST
-        $input = json_decode($_POST['datos'], true);
+        // Verificar si hay datos en $_POST (FormData) o en el body (JSON)
+        if (!empty($_POST['datos'])) {
+            // Datos vienen de FormData (con posible archivo)
+            $input = json_decode($_POST['datos'], true);
+        } else {
+            // Datos vienen en JSON en el body
+            $input = json_decode(file_get_contents('php://input'), true);
+        }
 
         if(!$this->validarDatos($input)){
            return $this->datosInvalidosRespuesta();
@@ -113,6 +118,10 @@ class LibroController {
         $libro = $this->libroDB->create($input);
 
         if(!$libro){
+            // Si hay error y se guardó imagen, eliminarla
+            if ($nombreImagen) {
+                $this->eliminarImagen($nombreImagen);
+            }
             return $this->internalServerError();
         }
 
@@ -133,22 +142,59 @@ class LibroController {
         if(!$libro){
             return $this->noEncontradoRespuesta();
         }
-        //el libro existe
-        //leo los datos que llegan en el body de la  petición
-        $input = json_decode(file_get_contents('php://input'),true);
 
-        // if(!$this->validarDatos($input)){
-        //     return $this->datosInvalidosRespuesta();
-        // }
+        // Verificar si hay datos en $_POST (FormData) o en el body (JSON)
+        if (!empty($_POST['datos'])) {
+            // Datos vienen de FormData (con posible archivo)
+            $input = json_decode($_POST['datos'], true);
+        } else {
+            // Datos vienen en JSON en el body
+            $input = json_decode(file_get_contents('php://input'), true);
+        }
 
-        //el libro existe y los datos que llegan son válidos
+        if(!$this->validarDatos($input)){
+            return $this->datosInvalidosRespuesta();
+        }
+
+        // Guardar nombre de imagen anterior para eliminarla después
+        $imagenAnterior = $libro['imagen'];
+        $nombreImagenNueva = $imagenAnterior; // Por defecto mantener la actual
+
+        // Procesar nueva imagen si existe
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            // Validar nueva imagen
+            $validacionImagen = $this->validarImagen($_FILES['imagen']);
+            if (!$validacionImagen['valida']) {
+                return $this->imagenInvalidaRespuesta($validacionImagen['mensaje']);
+            }
+
+            // Guardar nueva imagen con nombre basado en el título
+            $nombreImagenNueva = $this->guardarImagen($_FILES['imagen'], $input['titulo']);
+            if (!$nombreImagenNueva) {
+                return $this->errorGuardarImagenRespuesta();
+            }
+        }
+
+        // Añadir nombre de imagen a los datos (nueva o mantener actual)
+        $input['imagen'] = $nombreImagenNueva;
+
+        // Actualizar datos en la base de datos
         $libroActualizado = $this->libroDB->update($this->libroId, $input);
 
         if(!$libroActualizado){
+            // Si hay error y se guardó nueva imagen, eliminarla
+            if ($nombreImagenNueva !== $imagenAnterior) {
+                $this->eliminarImagen($nombreImagenNueva);
+            }
             return $this->internalServerError();
         }
-        //el libro se ha actualizado con éxito
-        //construyo la respuesta
+
+        // Si todo salió bien y hay nueva imagen, eliminar la anterior
+        if ($nombreImagenNueva !== $imagenAnterior && !empty($imagenAnterior)) {
+            $this->eliminarImagen($imagenAnterior);
+        }
+
+        // Construir respuesta exitosa
         $respuesta['status_code_header'] = 'HTTP/1.1 200 OK';
         $respuesta['body'] = json_encode([
             'success' => true,
@@ -156,7 +202,6 @@ class LibroController {
             'data' => $libroActualizado
         ]);
         return $respuesta;
-
     }
 
     private function deleteLibro($id){
@@ -167,6 +212,11 @@ class LibroController {
         }
 
         if($this->libroDB->delete($id)){
+            // Si el libro tenía imagen, eliminarla del servidor
+            if (!empty($libro['imagen'])) {
+                $this->eliminarImagen($libro['imagen']);
+            }
+
             //libro borrado
             //construir la respuesta
             $respuesta['status_code_header'] = 'HTTP/1.1 200 OK';
@@ -182,23 +232,7 @@ class LibroController {
 
     }//fin delete libro
 
-
-    private function validarDatos($datos){
-        if(!isset($datos['titulo']) || !isset($datos['autor'])){
-            return false;
-        }
-        //validar que la fecha sea un número de 4 dígitos, mayor a 1000 y menor que el año que viene
-        $anio = $datos['fecha_publicacion'];
-        $anioActual = (int)date("Y");
-
-        if(!is_numeric($anio) || strlen((string)$anio) !== 4 || $anio < 1000 || $anio > $anioActual + 1){
-            return false;
-        }
-
-        return true;
-    }
-
-        /**
+    /**
      * Valida que el archivo subido sea una imagen válida
      * @param array $archivo - Array de $_FILES
      * @return array - ['valida' => bool, 'mensaje' => string]
@@ -262,6 +296,12 @@ class LibroController {
             mkdir($directorioDestino, 0755, true);
         }
         
+        // Si ya existe un archivo con ese nombre, añadir timestamp
+        if (file_exists($rutaCompleta)) {
+            $nombreArchivo = $nombreLimpio . '_' . time() . '.' . $extension;
+            $rutaCompleta = $directorioDestino . $nombreArchivo;
+        }
+        
         // Mover archivo subido
         if (move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
             return $nombreArchivo;
@@ -319,7 +359,20 @@ class LibroController {
         }
     }
 
+    private function validarDatos($datos){
+        if(!isset($datos['titulo']) || !isset($datos['autor'])){
+            return false;
+        }
+        //validar que la fecha sea un número de 4 dígitos, mayor a 1000 y menor que el año que viene
+        $anio = $datos['fecha_publicacion'];
+        $anioActual = (int)date("Y");
 
+        if(!is_numeric($anio) || strlen((string)$anio) !== 4 || $anio < 1000 || $anio > $anioActual + 1){
+            return false;
+        }
+
+        return true;
+    }
 
     private function noEncontradoRespuesta(){
         $respuesta['status_code_header'] = 'HTTP/1.1 404 Not Found';

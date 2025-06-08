@@ -16,12 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // si document.querySelector('form').style.display devuelve un valor vacío 
         // estado toma el segundo valor none
         const estado = document.querySelector('form').style.display || 'none';
+
         if(estado === 'none'){
             document.querySelector('form').style.display = 'grid'
             document.getElementById("crear").textContent = 'Ocultar formulario'
         }else{
             document.querySelector('form').style.display = 'none'
             document.getElementById("crear").textContent = 'Crear nuevo libro'
+        }
+
+       if(modoEdicion){
+            resetearModoCreacion()
         }
         
     })
@@ -104,11 +109,15 @@ function libroEliminado(data){
 
 function editarLibro(id, titulo){
         // Encontramos el libro en los datos que ya tenemos
-    const libroAEditar = libros.find(l => l.id === id);
+    const libroAEditar = libros.find(l => l.id == id);
     
     if (libroAEditar) {
+        modoEdicion = true
+        libroEditandoId = id
         rellenarFormularioEdicion(libroAEditar);
-        mostrarFormularioEdicion(id);
+        mostrarFormularioEdicion();
+    }else{
+        alert("No se encontraron los datos del libro")
     }
 }
 
@@ -197,6 +206,92 @@ function enviarDatosNuevoLibro(e){
         alert("❌ Error al guardar el libro");
     });
 
+}
+
+
+
+/**
+ * Rellena el formulario con los datos del libro a editar
+ * @param {Object} libroAEditar - Datos del libro
+ */
+function rellenarFormularioEdicion(libroAEditar) {
+    document.getElementById("titulo").value = libroAEditar.titulo || '';
+    document.getElementById("autor").value = libroAEditar.autor || '';
+    document.getElementById("genero").value = libroAEditar.genero || '';
+    document.getElementById("fecha_publicacion").value = libroAEditar.fecha_publicacion || '';
+    document.getElementById("disponible").checked = libroAEditar.disponible == 1;
+    document.getElementById("favorito").checked = libroAEditar.favorito == 1;
+    document.getElementById("resumen").value = libroAEditar.resumen || '';
+    
+    // Limpiar el campo de imagen (no podemos prellenar un input file)
+    document.getElementById("imagen").value = '';
+    
+    // Mostrar imagen actual si existe
+    mostrarImagenActual(libroAEditar.imagen, libroAEditar.titulo);
+}
+
+/**
+ * Muestra el formulario en modo edición
+ */
+function mostrarFormularioEdicion() {
+    // Mostrar formulario
+    document.querySelector('form').style.display = 'grid';
+    
+    // Cambiar textos para modo edición
+    document.querySelector('form h2').textContent = '✏️ Editar Libro';
+    document.getElementById('btnGuardar').textContent = 'Actualizar libro';
+    document.getElementById("crear").textContent = 'Ocultar formulario';
+}
+
+/**
+ * Muestra la imagen actual del libro si existe
+ * @param {string} imagen - Nombre del archivo de imagen
+ * @param {string} titulo - Título del libro
+ */
+function mostrarImagenActual(imagen, titulo) {
+    // Eliminar imagen previa si existe
+    const imagenPrevia = document.getElementById('imagen-actual');
+    if (imagenPrevia) {
+        imagenPrevia.remove();
+    }
+    
+    if (imagen && imagen.trim() !== '') {
+        // Crear elemento para mostrar imagen actual
+        const divImagen = document.createElement('div');
+        divImagen.id = 'imagen-actual';
+        divImagen.innerHTML = `
+            <p><strong>Imagen actual:</strong></p>
+            <img src="../img/peques/${imagen}?${new Date().getTime()}" 
+                 alt="${titulo}" 
+                 style="max-width: 100px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 12px; color: #666;">Selecciona una nueva imagen para reemplazarla</p>
+        `;
+        
+        // Insertar después del input de imagen
+        const inputImagen = document.getElementById('imagen');
+        inputImagen.parentNode.insertBefore(divImagen, inputImagen.nextSibling);
+    }
+}
+
+/**
+ * Resetea el formulario a modo creación
+ */
+function resetearModoCreacion() {
+    modoEdicion = false;
+    libroEditandoId = null;
+    
+    // Restaurar textos originales
+    document.querySelector('form h2').textContent = '📚 Nuevo Libro';
+    document.getElementById('btnGuardar').textContent = 'Guardar libro';
+    
+    // Eliminar imagen actual si existe
+    const imagenPrevia = document.getElementById('imagen-actual');
+    if (imagenPrevia) {
+        imagenPrevia.remove();
+    }
+    
+    // Limpiar formulario
+    document.querySelector("form").reset();
 }
 
 
