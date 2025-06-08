@@ -105,15 +105,80 @@ function editarLibro(id){
 function enviarDatosNuevoLibro(e){
     e.preventDefault(); 
 
-    //comprobar los datos
-    //autor es obligatorio
+// Limpiar mensajes de error previos
+    document.querySelectorAll('.error').forEach(el => el.textContent = '');
 
-    //titulo es obligatorio
+    const titulo = document.getElementById("titulo").value.trim();
+    const autor = document.getElementById("autor").value.trim();
+    const genero = document.getElementById("genero").value.trim();
+    const publicacion = parseInt(document.getElementById("fecha_publicacion").value);
+    const imagen = document.getElementById("imagen").files[0];
+    const disponible = document.getElementById("disponible").checked;
+    const favorito = document.getElementById("favorito").checked;
+    const resumen = document.getElementById("resumen").value.trim();
 
-    //fecha es un número entre 1000 y el año actual + 1
+    let errores = false;
 
-    //resumen es un texto con 1000 caracteres como máximo
+    if (!titulo) {
+        document.getElementById("error-titulo").textContent = "El título es obligatorio.";
+        errores = true;
+    }
 
-    
-    alert('dentro de enviardatos nuevo libro')
+    if (!autor) {
+        document.getElementById("error-autor").textContent = "El autor es obligatorio.";
+        errores = true;
+    }
+
+    const anioActual = new Date().getFullYear();
+    if (isNaN(publicacion) || publicacion < 1000 || publicacion > anioActual + 1) {
+        document.getElementById("error-publicacion").textContent = "La fecha de publicación debe ser un año válido (4 dígitos).";
+        errores = true;
+    }
+
+    if (resumen.length > 1000) {
+        document.getElementById("error-resumen").textContent = "El resumen no puede superar los 1000 caracteres.";
+        errores = true;
+    }
+
+    if (errores) return; // Si hay errores, no enviar
+
+    const datos = {
+        titulo,
+        autor,
+        genero,
+        fecha_publicacion: publicacion,
+        disponible,
+        favorito,
+        resumen
+    };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datos));
+    if (imagen) {
+        formData.append("imagen", imagen);
+    }
+
+    fetch(url, {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ Libro guardado con éxito.");
+            document.querySelector("form").reset();
+            document.querySelector("form").style.display = "none";
+            document.getElementById("crear").textContent = 'Crear nuevo libro';
+            return fetch(url);
+        } else {
+            throw new Error(data.error || "Error al guardar");
+        }
+    })
+    .then(response => response.json())
+    .then(data => mostrarLibros(data))
+    .catch(error => {
+        console.error("Error al enviar datos:", error);
+        alert("❌ Error al guardar el libro");
+    });
+
 }

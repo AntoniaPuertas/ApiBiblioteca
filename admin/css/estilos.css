@@ -280,3 +280,9 @@ form {
         input[type="number"]:valid {
             border-color: #27ae60;
         }
+.error {
+    color: red;
+    font-size: 0.85em;
+    margin-top: 3px;
+    display: block;
+}

@@ -17,17 +17,19 @@
         <button id="crear" class="btn-crear">Crear nuevo libro</button>
     </div>
     <!-- enctype="multipart/form-data" se utiliza cuando queremos subir archivos -->
-    <form action="guardarLibro.php" method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data">
         <h2>📚 Nuevo Libro</h2>
         
         <div class="form-group">
             <label for="titulo">Título</label>
             <input type="text" id="titulo" name="titulo" required>
+            <small class="error" id="error-titulo"></small>
         </div>
 
         <div class="form-group">
             <label for="autor">Autor</label>
             <input type="text" id="autor" name="autor" required>
+            <small class="error" id="error-autor"></small>
         </div>
 
         <div class="form-group">
@@ -36,8 +38,9 @@
         </div>
 
         <div class="form-group">
-            <label for="publicacion">Fecha de publicación</label>
-            <input type="number" id="publicacion" name="publicacion" min="1000">
+            <label for="fecha_publicacion">Fecha de publicación</label>
+            <input type="number" id="fecha_publicacion" name="fecha_publicacion" min="1000">
+            <small class="error" id="error-publicacion"></small>
         </div>
 
         <div class="form-group">
@@ -58,9 +61,10 @@
         <div class="form-group">
             <label for="resumen">Resumen</label>
             <textarea name="resumen" id="resumen" rows="6" placeholder="Escribe un breve resumen del libro..."></textarea>
+            <small class="error" id="error-resumen"></small>
         </div>
 
-        <button type="submit">Guardar libro</button>
+        <button type="submit" id="btnGuardar">Guardar libro</button>
     </form>
     <table class="tablaLibros" id="tablaLibros"></table>
     </div>
