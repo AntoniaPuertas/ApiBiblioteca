@@ -1,6 +1,5 @@
 const url = 'http://localhost/ApiBiblioteca/api/libros';
-
-let libros = []; //Para almacenar los datos de los libros
+let librosData = []; // Variable global para almacenar los datos de los libros
 let modoEdicion = false; // Para saber si estamos editando o creando
 let libroEditandoId = null; // ID del libro que se está editando
 
@@ -16,27 +15,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // si document.querySelector('form').style.display devuelve un valor vacío 
         // estado toma el segundo valor none
         const estado = document.querySelector('form').style.display || 'none';
-
         if(estado === 'none'){
+            // Si estamos en modo edición, resetear a modo creación
+            if (modoEdicion) {
+                resetearModoCreacion();
+            }
             document.querySelector('form').style.display = 'grid'
             document.getElementById("crear").textContent = 'Ocultar formulario'
         }else{
             document.querySelector('form').style.display = 'none'
             document.getElementById("crear").textContent = 'Crear nuevo libro'
+            // Resetear modo si estaba editando
+            if (modoEdicion) {
+                resetearModoCreacion();
+            }
         }
-
-       if(modoEdicion){
-            resetearModoCreacion()
-        }
-        
     })
 
-    document.querySelector('form').addEventListener('submit', enviarDatosNuevoLibro)
+    document.querySelector('form').addEventListener('submit', enviarDatosLibro)
 })
 
 function mostrarLibros(datos){
 
-    libros = datos.data;
+    const libros = datos.data;
+    librosData = libros; // Guardamos los datos para reutilizar
     console.log(libros)
 
     if(datos.success && datos.count > 0){
@@ -66,7 +68,7 @@ function mostrarLibros(datos){
                 <td class="centrado">${(libro.favorito == 1) ? "Sí" : "No"}</td>
                 <td>${(libro.resumen !== null && libro.resumen.length > 0) ? libro.resumen.substring(0, 100)+"..." : ''}</td>
                 <td>
-                    <button onclick="editarLibro(${libro.id}, '${libro.titulo}')">Editar</button>
+                    <button onclick="editarLibro(${libro.id})">Editar</button>
                 </td>
                 <td>
                     <button onclick="eliminarLibro(${libro.id}, '${libro.titulo}')" class="btn-delete">Eliminar</button>
@@ -107,127 +109,43 @@ function libroEliminado(data){
     }
 }
 
-function editarLibro(id, titulo){
-        // Encontramos el libro en los datos que ya tenemos
-    const libroAEditar = libros.find(l => l.id == id);
+function editarLibro(id){
+    // Encontrar el libro en los datos que ya tenemos
+    const libro = librosData.find(l => l.id == id);
     
-    if (libroAEditar) {
-        modoEdicion = true
-        libroEditandoId = id
-        rellenarFormularioEdicion(libroAEditar);
+    if (libro) {
+        // Activar modo edición
+        modoEdicion = true;
+        libroEditandoId = id;
+        
+        // Rellenar formulario con datos existentes
+        rellenarFormularioEdicion(libro);
+        
+        // Mostrar formulario en modo edición
         mostrarFormularioEdicion();
-    }else{
-        alert("No se encontraron los datos del libro")
+    } else {
+        alert("Error: No se encontraron los datos del libro");
     }
 }
-
-function enviarDatosNuevoLibro(e){
-    e.preventDefault(); 
-
-// Limpiar mensajes de error previos
-    document.querySelectorAll('.error').forEach(el => el.textContent = '');
-
-    const titulo = document.getElementById("titulo").value.trim();
-    const autor = document.getElementById("autor").value.trim();
-    const genero = document.getElementById("genero").value.trim();
-    const publicacion = parseInt(document.getElementById("fecha_publicacion").value);
-    const imagen = document.getElementById("imagen").files[0];
-    const disponible = document.getElementById("disponible").checked;
-    const favorito = document.getElementById("favorito").checked;
-    const resumen = document.getElementById("resumen").value.trim();
-
-    let errores = false;
-
-    if (!titulo) {
-        document.getElementById("error-titulo").textContent = "El título es obligatorio.";
-        errores = true;
-    }
-
-    if (!autor) {
-        document.getElementById("error-autor").textContent = "El autor es obligatorio.";
-        errores = true;
-    }
-
-    const anioActual = new Date().getFullYear();
-    if (isNaN(publicacion) || publicacion < 1000 || publicacion > anioActual + 1) {
-        document.getElementById("error-publicacion").textContent = "La fecha de publicación debe ser un año válido (4 dígitos).";
-        errores = true;
-    }
-
-    if (resumen.length > 1000) {
-        document.getElementById("error-resumen").textContent = "El resumen no puede superar los 1000 caracteres.";
-        errores = true;
-    }
-
-    const validacionImagen = validarImagen(imagen);
-    if (!validacionImagen.esValido) {
-        document.getElementById("error-imagen").textContent = validacionImagen.mensaje;
-        errores = true;
-    }
-
-    if (errores) return; // Si hay errores, no enviar
-
-    const datos = {
-        titulo,
-        autor,
-        genero,
-        fecha_publicacion: publicacion,
-        disponible,
-        favorito,
-        resumen
-    };
-
-    const formData = new FormData();
-    formData.append("datos", JSON.stringify(datos));
-    if (imagen) {
-        formData.append("imagen", imagen);
-    }
-
-    fetch(url, {
-        method: "POST",
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("✅ Libro guardado con éxito.");
-            document.querySelector("form").reset();
-            document.querySelector("form").style.display = "none";
-            document.getElementById("crear").textContent = 'Crear nuevo libro';
-            return fetch(url);
-        } else {
-            throw new Error(data.error || "Error al guardar");
-        }
-    })
-    .then(response => response.json())
-    .then(data => mostrarLibros(data))
-    .catch(error => {
-        console.error("Error al enviar datos:", error);
-        alert("❌ Error al guardar el libro");
-    });
-
-}
-
-
 
 /**
  * Rellena el formulario con los datos del libro a editar
- * @param {Object} libroAEditar - Datos del libro
+ * @param {Object} libro - Datos del libro
  */
-function rellenarFormularioEdicion(libroAEditar) {
-    document.getElementById("titulo").value = libroAEditar.titulo || '';
-    document.getElementById("autor").value = libroAEditar.autor || '';
-    document.getElementById("genero").value = libroAEditar.genero || '';
-    document.getElementById("fecha_publicacion").value = libroAEditar.fecha_publicacion || '';
-    document.getElementById("disponible").checked = libroAEditar.disponible == 1;
-    document.getElementById("favorito").checked = libroAEditar.favorito == 1;
-    document.getElementById("resumen").value = libroAEditar.resumen || '';
+function rellenarFormularioEdicion(libro) {
+    document.getElementById("titulo").value = libro.titulo || '';
+    document.getElementById("autor").value = libro.autor || '';
+    document.getElementById("genero").value = libro.genero || '';
+    document.getElementById("fecha_publicacion").value = libro.fecha_publicacion || '';
+    document.getElementById("disponible").checked = libro.disponible == 1;
+    document.getElementById("favorito").checked = libro.favorito == 1;
+    document.getElementById("resumen").value = libro.resumen || '';
     
     // Limpiar el campo de imagen (no podemos prellenar un input file)
     document.getElementById("imagen").value = '';
     
     // Mostrar imagen actual si existe
-    mostrarImagenActual(libroAEditar.imagen, libroAEditar.titulo);
+    mostrarImagenActual(libro.imagen, libro.titulo);
 }
 
 /**
@@ -294,7 +212,6 @@ function resetearModoCreacion() {
     document.querySelector("form").reset();
 }
 
-
 /**
  * Valida que el archivo sea una imagen válida y no exceda el tamaño máximo
  * @param {File} archivo - Archivo a validar
@@ -334,4 +251,117 @@ function validarImagen(archivo, tamañoMaximoMB = 1) {
     }
 
     return { esValido: true, mensaje: "" };
+}
+
+function enviarDatosLibro(e){
+    e.preventDefault(); 
+
+    // Limpiar mensajes de error previos
+    document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+    const titulo = document.getElementById("titulo").value.trim();
+    const autor = document.getElementById("autor").value.trim();
+    const genero = document.getElementById("genero").value.trim();
+    const publicacion = parseInt(document.getElementById("fecha_publicacion").value);
+    const imagen = document.getElementById("imagen").files[0];
+    const disponible = document.getElementById("disponible").checked;
+    const favorito = document.getElementById("favorito").checked;
+    const resumen = document.getElementById("resumen").value.trim();
+
+    let errores = false;
+
+    // Validaciones existentes
+    if (!titulo) {
+        document.getElementById("error-titulo").textContent = "El título es obligatorio.";
+        errores = true;
+    }
+
+    if (!autor) {
+        document.getElementById("error-autor").textContent = "El autor es obligatorio.";
+        errores = true;
+    }
+
+    const anioActual = new Date().getFullYear();
+    if (isNaN(publicacion) || publicacion < 1000 || publicacion > anioActual + 1) {
+        document.getElementById("error-publicacion").textContent = "La fecha de publicación debe ser un año válido (4 dígitos).";
+        errores = true;
+    }
+
+    if (resumen.length > 1000) {
+        document.getElementById("error-resumen").textContent = "El resumen no puede superar los 1000 caracteres.";
+        errores = true;
+    }
+
+    // Validación de imagen (solo si se seleccionó una nueva)
+    if (imagen) {
+        const validacionImagen = validarImagen(imagen);
+        if (!validacionImagen.esValido) {
+            // Crear elemento de error para imagen si no existe
+            let errorImagen = document.getElementById("error-imagen");
+            if (!errorImagen) {
+                errorImagen = document.createElement("small");
+                errorImagen.id = "error-imagen";
+                errorImagen.className = "error";
+                document.getElementById("imagen").parentNode.appendChild(errorImagen);
+            }
+            errorImagen.textContent = validacionImagen.mensaje;
+            errores = true;
+        }
+    }
+
+    if (errores) return; // Si hay errores, no enviar
+
+    const datos = {
+        titulo,
+        autor,
+        genero,
+        fecha_publicacion: publicacion,
+        disponible,
+        favorito,
+        resumen
+    };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datos));
+    if (imagen) {
+        formData.append("imagen", imagen);
+    }
+
+    // Determinar si es creación o edición
+    const metodo = "POST"; // Siempre POST para que PHP procese $_FILES
+    const urlPeticion = modoEdicion ? `${url}/${libroEditandoId}` : url;
+    const mensajeExito = modoEdicion ? "✅ Libro actualizado con éxito." : "✅ Libro guardado con éxito.";
+
+    // Si es edición, añadir _method para spoofing
+    if (modoEdicion) {
+        formData.append("_method", "PUT");
+    }
+
+    fetch(urlPeticion, {
+        method: metodo,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(mensajeExito);
+            document.querySelector("form").reset();
+            document.querySelector("form").style.display = "none";
+            document.getElementById("crear").textContent = 'Crear nuevo libro';
+            
+            // Resetear modo edición
+            resetearModoCreacion();
+            
+            return fetch(url);
+        } else {
+            throw new Error(data.error || "Error al guardar");
+        }
+    })
+    .then(response => response.json())
+    .then(data => mostrarLibros(data))
+    .catch(error => {
+        console.error("Error al enviar datos:", error);
+        const accion = modoEdicion ? "actualizar" : "guardar";
+        alert(`❌ Error al ${accion} el libro`);
+    });
 }

@@ -17,8 +17,14 @@ class LibroController {
 
 
     public function processRequest(){
+        // Detectar method spoofing: si viene _method, usarlo en lugar del real
+        $method = $this->requestMethod;
+        if ($this->requestMethod === 'POST' && isset($_POST['_method'])) {
+            $method = strtoupper($_POST['_method']);
+        }
+
         //comprobar si la petición ha sido realizada con GET, POST, PUT, DELETE
-        switch($this->requestMethod){
+        switch($method){
             case 'GET':
                 if($this->libroId){
                     //devolver un libro
@@ -143,12 +149,12 @@ class LibroController {
             return $this->noEncontradoRespuesta();
         }
 
-        // Verificar si hay datos en $_POST (FormData) o en el body (JSON)
+        // Verificar si hay datos en $_POST (FormData con method spoofing) o en el body (JSON)
         if (!empty($_POST['datos'])) {
-            // Datos vienen de FormData (con posible archivo)
+            // Datos vienen de FormData (con posible archivo y method spoofing)
             $input = json_decode($_POST['datos'], true);
         } else {
-            // Datos vienen en JSON en el body
+            // Datos vienen en JSON en el body (petición PUT real sin archivos)
             $input = json_decode(file_get_contents('php://input'), true);
         }
 
@@ -296,11 +302,11 @@ class LibroController {
             mkdir($directorioDestino, 0755, true);
         }
         
-        // Si ya existe un archivo con ese nombre, añadir timestamp
-        if (file_exists($rutaCompleta)) {
-            $nombreArchivo = $nombreLimpio . '_' . time() . '.' . $extension;
-            $rutaCompleta = $directorioDestino . $nombreArchivo;
-        }
+        // // Si ya existe un archivo con ese nombre, añadir timestamp
+        // if (file_exists($rutaCompleta)) {
+        //     $nombreArchivo = $nombreLimpio . '_' . time() . '.' . $extension;
+        //     $rutaCompleta = $directorioDestino . $nombreArchivo;
+        // }
         
         // Mover archivo subido
         if (move_uploaded_file($archivo['tmp_name'], $rutaCompleta)) {
